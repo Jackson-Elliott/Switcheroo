@@ -285,3 +285,13 @@ export const OTHER_SERVICE: StreamingService = {
   logo: '❓',
   type: 'streaming',
 }
+
+const ALL_SERVICES: StreamingService[] = [
+  PAUSED_TV_SERVICE,
+  OTHER_SERVICE,
+  ...REGIONS.flatMap((r) => r.services),
+]
+
+export function findServiceById(id: string): StreamingService | null {
+  return ALL_SERVICES.find((s) => s.id === id) ?? null
+}

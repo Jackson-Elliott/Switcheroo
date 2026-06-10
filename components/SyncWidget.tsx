@@ -1,8 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import LiveClockDisplay from '@/components/LiveClockDisplay'
 import { formatLiveClock } from '@/hooks/useLiveGameClock'
 import { isLiveStatus } from '@/lib/api'
+
+const FINISHED_STATUSES = ['FT', 'AET', 'PEN', 'AWD', 'WO']
 
 type Props = {
   liveTotalSeconds: number | null
@@ -11,8 +14,6 @@ type Props = {
   delaySeconds: number
   onChange: (seconds: number) => void
 }
-
-const FINISHED_STATUSES = ['FT', 'AET', 'PEN', 'AWD', 'WO']
 
 export default function SyncWidget({
   liveTotalSeconds,
@@ -54,7 +55,7 @@ export default function SyncWidget({
                 className="absolute top-0 -translate-x-1/2 text-xs font-medium tabular-nums text-white/55"
                 style={{ left: 'var(--fill)' }}
               >
-                {localDelay}s
+                {formatLiveClock(localDelay)}
               </span>
             </div>
           )}
@@ -72,12 +73,12 @@ export default function SyncWidget({
           </div>
         </div>
         <div className="flex items-center justify-between text-xs text-white/35">
-          <span>← less delay</span>
-          <span>more delay →</span>
+          <span>← Less delay</span>
+          <span>More delay →</span>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap justify-center gap-1.5">
         {[+5, +10, +15, +30].map((delta) => (
           <button
             key={delta}
@@ -115,7 +116,6 @@ export default function SyncWidget({
   }
 
   const delayedTotalSeconds = Math.max(0, liveTotalSeconds - localDelay)
-  const delayedDisplay = formatLiveClock(delayedTotalSeconds)
   const isRoughMatch =
     localDelay > 0 &&
     Math.floor(liveTotalSeconds / 60) === Math.floor(delayedTotalSeconds / 60)
@@ -132,8 +132,8 @@ export default function SyncWidget({
               LIVE game time
             </span>
           </div>
-          <div className="text-4xl font-black tabular-nums leading-none text-white">
-            {liveDisplay}
+          <div className="text-4xl text-white">
+            <LiveClockDisplay totalSeconds={liveTotalSeconds} />
           </div>
         </div>
 
@@ -148,8 +148,8 @@ export default function SyncWidget({
               Your screen
             </span>
           </div>
-          <div className="text-4xl font-black tabular-nums leading-none text-white">
-            {delayedDisplay}
+          <div className="text-4xl text-white">
+            <LiveClockDisplay totalSeconds={delayedTotalSeconds} />
           </div>
         </div>
       </div>
@@ -157,6 +157,16 @@ export default function SyncWidget({
       <p className="mx-auto max-w-[280px] text-balance text-center text-xs leading-relaxed text-white/45">
         Slide until the right clock matches your stream.
       </p>
+
+      {liveTotalSeconds !== null && liveTotalSeconds <= 120 && (
+        <button
+          type="button"
+          onClick={() => handleChange(liveTotalSeconds)}
+          className="glass-chip w-full rounded-xl px-3 py-2.5 text-xs font-medium text-white/70 hover:text-white"
+        >
+          Kickoff just started on my stream — set delay to {liveTotalSeconds}s
+        </button>
+      )}
 
       {delayControls}
     </div>

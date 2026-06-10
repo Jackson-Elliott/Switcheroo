@@ -14,20 +14,21 @@ export type MatchEvent = {
   comments: string | null
 }
 
-export const ALERT_LEVEL = 'critical' as const
-export type AlertLevel = typeof ALERT_LEVEL
+export type AlertLevel = 'critical' | 'high' | 'medium' | 'low'
 
 export type BigMoment = {
   eventKey: string
   level: AlertLevel
   headline: string
   subtext: string
+  notificationTitle: string
   event: MatchEvent
 }
 
-const ALERT_HEADLINE = 'PUT YOUR EYES ON THE SCREEN'
-const ALERT_SUBTEXT =
-  "Get Command+Tab ready — there's a big moment worth switching for."
+export const ALERT_NOTIFICATION_TITLE = 'Big moment — look at your screen'
+export const ALERT_HEADLINE = 'BIG MOMENT'
+export const ALERT_SUBTEXT =
+  "Get Command+Tab ready — something worth switching for is about to hit your screen."
 
 export function getEventKey(event: MatchEvent): string {
   const extra = event.time.extra ? `+${event.time.extra}` : ''
@@ -37,14 +38,39 @@ export function getEventKey(event: MatchEvent): string {
   return `${event.time.elapsed}${extra}-${event.type}-${event.detail}-${event.player.name ?? 'unknown'}`
 }
 
+function getAlertLevel(type: string, detail: string): AlertLevel {
+  if (type === 'Goal') return 'critical'
+  if (type === 'Var') {
+    if (detail === 'Penalty confirmed' || detail === 'Goal cancelled') return 'critical'
+    return 'high'
+  }
+  if (type === 'Card') return 'critical'
+  if (type === 'Chance' && detail === 'Big Chance') return 'medium'
+  if (type === 'Chance') return 'low'
+  return 'medium'
+}
+
 function createAlert(event: MatchEvent): BigMoment {
   return {
     eventKey: getEventKey(event),
-    level: ALERT_LEVEL,
+    level: getAlertLevel(event.type, event.detail),
     headline: ALERT_HEADLINE,
     subtext: ALERT_SUBTEXT,
+    notificationTitle: ALERT_NOTIFICATION_TITLE,
     event,
   }
+}
+
+export function createDemoAlert(): BigMoment {
+  return createAlert({
+    time: { elapsed: 67, extra: null },
+    team: { id: 0, name: 'Demo', logo: '⚽' },
+    player: { id: null, name: null },
+    assist: { id: null, name: null },
+    type: 'Chance',
+    detail: 'Big Chance',
+    comments: 'demo-alert',
+  })
 }
 
 export function classifyEvent(

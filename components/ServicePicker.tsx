@@ -1,14 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useUserTimezone } from '@/hooks/useUserTimezone'
 import { REGIONS, PAUSED_TV_SERVICE, OTHER_SERVICE, type StreamingService } from '@/lib/services'
+import { detectDefaultRegionId } from '@/lib/region-detect'
 
 type Props = {
   onSelect: (service: StreamingService) => void
 }
 
 export default function ServicePicker({ onSelect }: Props) {
+  const { timeZone, ready } = useUserTimezone()
   const [activeRegion, setActiveRegion] = useState('au')
+  const [regionDetected, setRegionDetected] = useState(false)
+
+  useEffect(() => {
+    if (!ready || regionDetected) return
+    setActiveRegion(detectDefaultRegionId(timeZone))
+    setRegionDetected(true)
+  }, [ready, timeZone, regionDetected])
+
   const currentRegion = REGIONS.find((r) => r.id === activeRegion) ?? REGIONS[0]
 
   return (

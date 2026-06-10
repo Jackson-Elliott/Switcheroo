@@ -47,7 +47,7 @@ export default function MatchScoreCard({
 
   return (
     <div className={`glass rounded-2xl ${compact ? 'p-4' : 'p-5'}`}>
-      <div className={`flex items-center justify-between ${compact ? 'mb-3' : 'mb-4'}`}>
+      <div className={`flex w-full items-center justify-between ${compact ? 'mb-3' : 'mb-4'}`}>
         <div className="flex items-center gap-2">
           {isLive ? (
             <span className="glass-badge flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-[#CCFF00]">
@@ -68,14 +68,14 @@ export default function MatchScoreCard({
           <button
             type="button"
             onClick={onChange}
-            className="glass-chip rounded-md px-2 py-0.5 text-[10px] text-white/45 hover:text-white"
+            className="glass-chip ml-auto shrink-0 rounded-md px-2 py-0.5 text-[10px] text-white/45 hover:text-white"
           >
             Change game
           </button>
         )}
       </div>
 
-      <div className={`flex items-center justify-center ${compact ? 'gap-3' : 'gap-6'}`}>
+      <div className={`flex items-center justify-center ${compact ? 'gap-2.5' : 'gap-5'}`}>
         <TeamDisplay name={fixture.teams.home.name} logo={fixture.teams.home.logo} compact={compact} />
         <div className="flex flex-col items-center gap-0.5">
           <div
@@ -110,20 +110,20 @@ function TeamDisplay({
 }) {
   const isEmoji = logo && !logo.startsWith('http')
   return (
-    <div className="flex flex-1 flex-col items-center gap-1.5">
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
       {isEmoji ? (
-        <span className={`leading-none ${compact ? 'text-3xl' : 'text-4xl'}`}>{logo}</span>
+        <span className={`leading-none ${compact ? 'text-4xl' : 'text-[2.7rem]'}`}>{logo}</span>
       ) : logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logo}
           alt={name}
-          className={compact ? 'h-8 w-8 object-contain' : 'h-10 w-10 object-contain'}
+          className={compact ? 'h-[38px] w-[38px] object-contain' : 'h-12 w-12 object-contain'}
         />
       ) : (
         <span
           className={`flex items-center justify-center rounded-full glass-inset text-sm ${
-            compact ? 'h-8 w-8' : 'h-10 w-10'
+            compact ? 'h-[38px] w-[38px]' : 'h-12 w-12'
           }`}
         >
           ⚽
@@ -131,7 +131,7 @@ function TeamDisplay({
       )}
       <span
         className={`font-medium text-white/80 text-center leading-tight ${
-          compact ? 'max-w-[64px] text-[10px]' : 'max-w-[80px] text-sm'
+          compact ? 'max-w-[77px] text-[12px]' : 'max-w-[96px] text-[1.05rem]'
         }`}
       >
         {name}

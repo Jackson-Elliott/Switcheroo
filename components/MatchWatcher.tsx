@@ -7,24 +7,28 @@ import {
   extractNewBigChanceEvents,
   seedBigChanceCounts,
 } from '@/lib/big-chances'
-import { classifyEvent, getEventKey, type BigMoment } from '@/lib/events'
+import { classifyEvent, createDemoAlert, getEventKey, type BigMoment } from '@/lib/events'
 import { fireBrowserNotification, getAlertSoundEnabled, playAlertSound, preloadAlertSound } from '@/lib/notifications'
 import { getEffectiveHeadsUp, getNotificationWaitMs } from '@/lib/timing'
 import AlertOverlay from './AlertOverlay'
 import AlertSoundToggle from './AlertSoundToggle'
+import BackgroundAlertsSetup from './BackgroundAlertsSetup'
 import HeadsUpPicker from './HeadsUpPicker'
+import PreMatchCountdown from './PreMatchCountdown'
 import SyncWidget from './SyncWidget'
+
 import { type MatchDisplayState } from './MatchScoreCard'
 
-const POLL_INTERVAL_MS = 5_000
+const POLL_INTERVAL_VISIBLE_MS = 5_000
+const POLL_INTERVAL_HIDDEN_MS = 3_000
 
 type Props = {
   fixture: Fixture
   delaySeconds: number
   headsUpSeconds: number
+  isDemo?: boolean
   onDelayChange: (seconds: number) => void
   onHeadsUpChange: (seconds: number) => void
-  onWatchHintChange?: (hint: string | null) => void
   onDisplayUpdate?: (display: MatchDisplayState) => void
 }
 
@@ -32,9 +36,9 @@ export default function MatchWatcher({
   fixture,
   delaySeconds,
   headsUpSeconds,
+  isDemo = false,
   onDelayChange,
   onHeadsUpChange,
-  onWatchHintChange,
   onDisplayUpdate,
 }: Props) {
   const [currentMinute, setCurrentMinute] = useState<number | null>(
@@ -48,7 +52,7 @@ export default function MatchWatcher({
   const [activeMoment, setActiveMoment] = useState<BigMoment | null>(null)
   const [activeCountdown, setActiveCountdown] = useState(0)
   const [scheduledFireAt, setScheduledFireAt] = useState<number[]>([])
-  const [tick, setTick] = useState(0)
+  const [isTabHidden, setIsTabHidden] = useState(false)
 
   const seenEventKeys = useRef<Set<string>>(new Set())
   const isFirstPoll = useRef(true)
@@ -65,6 +69,13 @@ export default function MatchWatcher({
 
   useEffect(() => {
     if (getAlertSoundEnabled()) preloadAlertSound()
+  }, [])
+
+  useEffect(() => {
+    const onVisibility = () => setIsTabHidden(document.hidden)
+    onVisibility()
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [])
 
   const poll = useCallback(async () => {
@@ -96,7 +107,6 @@ export default function MatchWatcher({
 
       const events = [...apiEvents, ...statBigChances]
 
-      // Detect new big moments
       for (const event of events) {
         const key = getEventKey(event)
         if (seenEventKeys.current.has(key)) continue
@@ -125,42 +135,15 @@ export default function MatchWatcher({
 
   useEffect(() => {
     poll()
-    const interval = setInterval(poll, POLL_INTERVAL_MS)
+    const intervalMs = isTabHidden ? POLL_INTERVAL_HIDDEN_MS : POLL_INTERVAL_VISIBLE_MS
+    const interval = setInterval(poll, intervalMs)
     return () => {
       clearInterval(interval)
       pendingAlerts.current.forEach(clearTimeout)
       pendingAlerts.current.clear()
       setScheduledFireAt([])
     }
-  }, [poll])
-
-  useEffect(() => {
-    if (scheduledFireAt.length === 0 && !activeMoment) return
-    const id = setInterval(() => setTick((t) => t + 1), 1000)
-    return () => clearInterval(id)
-  }, [scheduledFireAt.length, activeMoment])
-
-  useEffect(() => {
-    if (!onWatchHintChange) return
-
-    if (activeMoment) {
-      onWatchHintChange('Big moment — look at your screen')
-      return
-    }
-
-    const nextFire = scheduledFireAt[0]
-    if (nextFire) {
-      const seconds = Math.max(0, Math.ceil((nextFire - Date.now()) / 1000))
-      if (seconds > 0) {
-        onWatchHintChange(`Heads-up in ${seconds}s — something big may be coming`)
-      } else {
-        onWatchHintChange('Big moment — look at your screen')
-      }
-      return
-    }
-
-    onWatchHintChange(null)
-  }, [activeMoment, scheduledFireAt, tick, onWatchHintChange])
+  }, [poll, isTabHidden])
 
   const { totalSeconds: liveTotalSeconds, display: liveGameClockDisplay } = useLiveGameClock(
     currentMinute,
@@ -176,6 +159,12 @@ export default function MatchWatcher({
     })
   }, [matchStatus, goals, currentMinute, currentExtra, onDisplayUpdate])
 
+  function handleDemoAlert() {
+    const moment = createDemoAlert()
+    const countdown = getEffectiveHeadsUp(delaySeconds, headsUpSeconds)
+    triggerAlert(moment, countdown)
+  }
+
   return (
     <>
       {activeMoment && (
@@ -187,6 +176,10 @@ export default function MatchWatcher({
       )}
 
       <div className="flex flex-col gap-6">
+        <PreMatchCountdown fixture={fixture} matchStatus={matchStatus} />
+
+        <BackgroundAlertsSetup />
+
         <SyncWidget
           liveTotalSeconds={liveTotalSeconds}
           liveDisplay={liveGameClockDisplay}
@@ -202,6 +195,16 @@ export default function MatchWatcher({
         />
 
         <AlertSoundToggle />
+
+        {isDemo && (
+          <button
+            type="button"
+            onClick={handleDemoAlert}
+            className="glass glass-warning w-full rounded-xl px-4 py-3 text-sm font-semibold text-amber-100/90"
+          >
+            Simulate demo alert
+          </button>
+        )}
       </div>
     </>
   )

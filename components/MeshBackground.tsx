@@ -2,6 +2,9 @@ export default function MeshBackground() {
   return (
     <div className="mesh-bg" aria-hidden>
       <div className="tm-base" />
+      <div className="tm-base-flow tm-base-flow-1" />
+      <div className="tm-base-flow tm-base-flow-2" />
+      <div className="tm-base-flow tm-base-flow-3" />
       <div className="tm-aurora">
         <div className="tm-sweep tm-sweep-1" />
         <div className="tm-sweep tm-sweep-2" />

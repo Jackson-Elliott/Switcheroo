@@ -10,7 +10,9 @@ type Props = {
 }
 
 function formatHeadsUpDisplay(seconds: number): string {
-  if (seconds <= 60) return `${seconds} sec`
+  if (seconds < 60) return `${seconds} sec`
+  if (seconds % 60 === 0) return `${seconds / 60} min`
+  if (seconds % 60 === 30) return `${seconds / 60} min`
   return formatDuration(seconds)
 }
 
@@ -91,16 +93,16 @@ export default function HeadsUpPicker({ delaySeconds, headsUpSeconds, onChange }
       )}
 
       {presets.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap justify-center gap-1.5">
           {presets.map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => handleChange(p)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+              className={`glass-chip rounded-lg px-3 py-1 text-xs font-medium transition-all duration-150 ${
                 localHeadsUp === p
-                  ? 'glass-chip glass-chip-active glass-violet text-violet-200'
-                  : 'glass-chip text-white/55'
+                  ? 'glass-chip-active glass-violet text-violet-200'
+                  : 'text-white/55'
               }`}
             >
               {formatHeadsUpDisplay(p)}

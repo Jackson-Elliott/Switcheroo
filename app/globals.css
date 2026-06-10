@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #021408;
+  --color-background: #010904;
   --color-foreground: #eef2ff;
   --font-sans: var(--font-inter-tight), system-ui, sans-serif;
   --font-display: var(--font-boldonse), system-ui, sans-serif;
@@ -19,6 +19,34 @@
   background-color: var(--color-zesty);
 }
 
+.credit-link {
+  display: inline-block;
+  font-family: var(--font-sans);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.credit-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.25s ease;
+}
+
+.credit-link:hover {
+  color: #eaff66;
+}
+
+.credit-link:hover::after {
+  transform: scaleX(1);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -32,7 +60,7 @@ body {
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  background: #021408;
+  background: #010904;
 }
 
 .font-display {
@@ -47,60 +75,120 @@ body {
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background: #021408;
+  background: #010904;
+}
+
+.mesh-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.22);
+  pointer-events: none;
 }
 
 .tm-base {
   position: absolute;
   inset: 0;
+  animation: tm-base-pan 36s ease-in-out infinite alternate;
   background:
     radial-gradient(
       ellipse 95% 70% at 50% 38% in oklab,
-      rgba(34, 197, 94, 0.14) 0%,
-      rgba(34, 197, 94, 0.06) 18%,
-      rgba(34, 197, 94, 0.022) 36%,
-      rgba(34, 197, 94, 0.005) 52%,
+      rgba(34, 197, 94, 0.11) 0%,
+      rgba(34, 197, 94, 0.045) 18%,
+      rgba(34, 197, 94, 0.016) 36%,
+      rgba(34, 197, 94, 0.004) 52%,
       transparent 74%
     ),
     radial-gradient(
       ellipse 75% 55% at 82% 68% in oklab,
-      rgba(21, 128, 61, 0.16) 0%,
-      rgba(21, 128, 61, 0.06) 20%,
-      rgba(21, 128, 61, 0.018) 38%,
+      rgba(21, 128, 61, 0.12) 0%,
+      rgba(21, 128, 61, 0.045) 20%,
+      rgba(21, 128, 61, 0.012) 38%,
       transparent 68%
     ),
     radial-gradient(
       ellipse 65% 50% at 14% 62% in oklab,
-      rgba(250, 204, 21, 0.08) 0%,
-      rgba(250, 204, 21, 0.03) 24%,
-      rgba(250, 204, 21, 0.008) 42%,
+      rgba(250, 204, 21, 0.06) 0%,
+      rgba(250, 204, 21, 0.022) 24%,
+      rgba(250, 204, 21, 0.006) 42%,
       transparent 68%
     ),
     radial-gradient(
       ellipse 55% 40% at 50% 72% in oklab,
-      rgba(132, 204, 22, 0.07) 0%,
-      rgba(132, 204, 22, 0.025) 30%,
+      rgba(132, 204, 22, 0.05) 0%,
+      rgba(132, 204, 22, 0.018) 30%,
       transparent 62%
     ),
     linear-gradient(
       in oklab 180deg,
-      #062a18 0%,
-      #052316 12%,
-      #041c12 24%,
-      #031810 36%,
-      #02150d 48%,
-      #021408 60%,
-      #011006 76%,
-      #010c05 100%
+      #041f14 0%,
+      #031a10 12%,
+      #02150c 24%,
+      #011008 36%,
+      #010c06 48%,
+      #010904 60%,
+      #010703 76%,
+      #000502 100%
     );
+}
+
+.tm-base-flow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: 0.58;
+  will-change: transform, opacity;
+}
+
+.tm-base-flow-1 {
+  width: min(110vmax, 920px);
+  height: min(75vmax, 640px);
+  top: 8%;
+  left: 18%;
+  background: radial-gradient(
+    ellipse 100% 100% at 50% 50% in oklab,
+    rgba(204, 255, 0, 0.12) 0%,
+    rgba(34, 197, 94, 0.06) 38%,
+    transparent 72%
+  );
+  animation: tm-flow-drift-1 22s ease-in-out infinite alternate;
+}
+
+.tm-base-flow-2 {
+  width: min(85vmax, 720px);
+  height: min(85vmax, 720px);
+  bottom: 6%;
+  right: 10%;
+  background: radial-gradient(
+    circle at 50% 50% in oklab,
+    rgba(132, 204, 22, 0.11) 0%,
+    rgba(21, 128, 61, 0.05) 42%,
+    transparent 70%
+  );
+  animation: tm-flow-drift-2 28s ease-in-out infinite alternate;
+}
+
+.tm-base-flow-3 {
+  width: min(60vmax, 520px);
+  height: min(45vmax, 380px);
+  top: 42%;
+  left: 52%;
+  background: radial-gradient(
+    ellipse 100% 100% at 50% 50% in oklab,
+    rgba(250, 204, 21, 0.09) 0%,
+    rgba(250, 204, 21, 0.03) 45%,
+    transparent 72%
+  );
+  animation: tm-flow-drift-3 19s ease-in-out infinite alternate;
 }
 
 .tm-aurora {
   position: absolute;
   inset: -20%;
   filter: blur(72px);
-  opacity: 0.92;
+  opacity: 0.78;
   transform: translateZ(0);
+  animation: tm-aurora-drift 48s ease-in-out infinite alternate;
 }
 
 .tm-sweep {
@@ -121,7 +209,7 @@ body {
     rgba(34, 197, 94, 0.05) 42%,
     transparent 72%
   );
-  animation: tm-sweep-spin 140s linear infinite;
+  animation: tm-sweep-orbit 88s linear infinite;
 }
 
 .tm-sweep-2 {
@@ -133,7 +221,7 @@ body {
     rgba(132, 204, 22, 0.04) 38%,
     transparent 70%
   );
-  animation: tm-sweep-spin 100s linear infinite reverse;
+  animation: tm-sweep-orbit 62s linear infinite reverse;
 }
 
 .tm-sweep-3 {
@@ -145,7 +233,7 @@ body {
     rgba(250, 204, 21, 0.03) 40%,
     transparent 72%
   );
-  animation: tm-sweep-spin 75s linear infinite;
+  animation: tm-sweep-orbit 46s linear infinite;
 }
 
 .tm-portal {
@@ -164,7 +252,7 @@ body {
     rgba(250, 204, 21, 0.03) 62%,
     transparent 82%
   );
-  animation: tm-portal-pulse 6s ease-in-out infinite;
+  animation: tm-portal-pulse 4.5s ease-in-out infinite;
 }
 
 .tm-dial-glow {
@@ -188,19 +276,19 @@ body {
 .tm-dial-glow-1 {
   width: min(92vmax, 820px);
   height: min(92vmax, 820px);
-  animation: tm-sweep-spin 90s linear infinite reverse;
+  animation: tm-sweep-orbit 72s linear infinite reverse;
 }
 
 .tm-dial-glow-2 {
   width: min(68vmax, 600px);
   height: min(68vmax, 600px);
-  animation: tm-sweep-spin 60s linear infinite;
+  animation: tm-sweep-orbit 48s linear infinite;
 }
 
 .tm-dial-glow-3 {
   width: min(44vmax, 380px);
   height: min(44vmax, 380px);
-  animation: tm-sweep-spin 45s linear infinite reverse;
+  animation: tm-sweep-orbit 36s linear infinite reverse;
 }
 
 .mesh-blob {
@@ -217,8 +305,8 @@ body {
   top: -15%;
   right: -10%;
   background: #15803d;
-  opacity: 0.16;
-  animation: tm-blob-drift 22s ease-in-out infinite;
+  opacity: 0.12;
+  animation: tm-blob-drift 16s ease-in-out infinite, tm-blob-pulse 9s ease-in-out infinite;
 }
 
 .mesh-blob-2 {
@@ -227,8 +315,8 @@ body {
   top: 30%;
   left: -20%;
   background: #22c55e;
-  opacity: 0.14;
-  animation: tm-blob-drift 18s ease-in-out infinite reverse;
+  opacity: 0.1;
+  animation: tm-blob-drift 13s ease-in-out infinite reverse, tm-blob-pulse 11s ease-in-out infinite reverse;
 }
 
 .mesh-blob-3 {
@@ -237,8 +325,8 @@ body {
   bottom: -5%;
   right: 10%;
   background: #84cc16;
-  opacity: 0.12;
-  animation: tm-blob-drift 26s ease-in-out infinite;
+  opacity: 0.09;
+  animation: tm-blob-drift 18s ease-in-out infinite, tm-blob-pulse 8s ease-in-out infinite;
 }
 
 .mesh-blob-4 {
@@ -246,9 +334,9 @@ body {
   height: min(38vmax, 380px);
   bottom: 15%;
   left: 8%;
-  background: #eab308;
-  opacity: 0.09;
-  animation: tm-blob-drift 20s ease-in-out infinite reverse;
+  background: #ccff00;
+  opacity: 0.06;
+  animation: tm-blob-drift 14s ease-in-out infinite reverse, tm-blob-pulse 10s ease-in-out infinite reverse;
 }
 
 .mesh-grain {
@@ -277,15 +365,83 @@ body {
   to { transform: translate(-50%, -52%) rotate(360deg); }
 }
 
+@keyframes tm-sweep-orbit {
+  0% {
+    transform: translate(-50%, -52%) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate(calc(-50% + 2.5%), calc(-52% - 1.5%)) rotate(180deg) scale(1.05);
+  }
+  100% {
+    transform: translate(-50%, -52%) rotate(360deg) scale(1);
+  }
+}
+
+@keyframes tm-base-pan {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  100% {
+    transform: scale(1.05) translate(-1.5%, 1.2%);
+  }
+}
+
+@keyframes tm-aurora-drift {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate(-2%, 1.5%) rotate(2deg);
+  }
+}
+
+@keyframes tm-flow-drift-1 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate(6%, 4%) scale(1.08);
+    opacity: 0.9;
+  }
+}
+
+@keyframes tm-flow-drift-2 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-5%, -3%) scale(1.06);
+    opacity: 0.85;
+  }
+}
+
+@keyframes tm-flow-drift-3 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate(-4%, 5%) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
 @keyframes tm-portal-pulse {
-  0%, 100% { opacity: 0.75; transform: translate(-50%, -52%) scale(1); }
-  50% { opacity: 1; transform: translate(-50%, -52%) scale(1.06); }
+  0%, 100% { opacity: 0.7; transform: translate(-50%, -52%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -52%) scale(1.1); }
 }
 
 @keyframes tm-blob-drift {
-  0%, 100% { transform: translate(0, 0); }
-  33% { transform: translate(2%, -1%); }
-  66% { transform: translate(-1%, 2%); }
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(4%, -2%) scale(1.04); }
+  66% { transform: translate(-2%, 4%) scale(0.98); }
+}
+
+@keyframes tm-blob-pulse {
+  0%, 100% { opacity: 0.08; }
+  50% { opacity: 0.16; }
 }
 
 @keyframes tm-shimmer {
@@ -776,6 +932,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .tm-base,
+  .tm-base-flow,
+  .tm-aurora,
   .tm-sweep,
   .tm-dial-glow,
   .tm-portal,

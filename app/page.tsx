@@ -1,33 +1,82 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import GameSelector from '@/components/GameSelector'
 import ServicePicker from '@/components/ServicePicker'
 import MatchWatcher from '@/components/MatchWatcher'
 import MatchScoreCard, { type MatchDisplayState } from '@/components/MatchScoreCard'
-import { requestNotificationPermission, getNotificationPermissionState } from '@/lib/notifications'
+import HowItWorks from '@/components/HowItWorks'
+import BackgroundAlertsRestoreButton from '@/components/BackgroundAlertsRestoreButton'
+import AuthorCreditLink from '@/components/AuthorCreditLink'
+import {
+  dismissBackgroundAlerts,
+  hasSeenStep3Intro,
+  isBackgroundAlertsDismissed,
+  markStep3IntroSeen,
+} from '@/lib/background-alerts'
+import { requestNotificationPermission } from '@/lib/notifications'
+import {
+  clearWatchSession,
+  loadWatchSession,
+  resolveSessionService,
+  saveWatchSession,
+  type SetupStep,
+} from '@/lib/session'
 import { type StreamingService } from '@/lib/services'
 import type { Fixture } from '@/lib/api'
 import { boldonse } from '@/lib/fonts'
 
-type SetupStep = 1 | 2 | 3
-
 export default function Home() {
+  const [hydrated, setHydrated] = useState(false)
   const [activeStep, setActiveStep] = useState<SetupStep>(1)
   const [selectedFixture, setSelectedFixture] = useState<Fixture | null>(null)
   const [selectedService, setSelectedService] = useState<StreamingService | null>(null)
   const [delaySeconds, setDelaySeconds] = useState(50)
   const [headsUpSeconds, setHeadsUpSeconds] = useState(50)
-  const [notifPermission, setNotifPermission] = useState<string | null>(null)
   const [matchDisplay, setMatchDisplay] = useState<MatchDisplayState | null>(null)
   const [isDemo, setIsDemo] = useState(false)
+  const prevActiveStep = useRef<SetupStep>(1)
 
-  const handleMatchDisplayUpdate = useCallback((display: MatchDisplayState) => {
-    setMatchDisplay(display)
+  useEffect(() => {
+    const session = loadWatchSession()
+    if (session) {
+      const service = resolveSessionService(session.serviceId)
+      if (service) {
+        setSelectedFixture(session.fixture)
+        setSelectedService(service)
+        setDelaySeconds(session.delaySeconds)
+        setHeadsUpSeconds(session.headsUpSeconds)
+        setActiveStep(session.activeStep)
+      }
+    }
+    setHydrated(true)
   }, [])
 
   useEffect(() => {
-    setNotifPermission(getNotificationPermissionState())
+    if (!hydrated || !selectedFixture || !selectedService || activeStep !== 3) return
+    saveWatchSession({
+      activeStep,
+      fixture: selectedFixture,
+      serviceId: selectedService.id,
+      delaySeconds,
+      headsUpSeconds,
+    })
+  }, [hydrated, activeStep, selectedFixture, selectedService, delaySeconds, headsUpSeconds])
+
+  useEffect(() => {
+    if (prevActiveStep.current === 3 && activeStep !== 3) {
+      markStep3IntroSeen()
+    }
+
+    if (activeStep === 3 && hasSeenStep3Intro() && !isBackgroundAlertsDismissed()) {
+      dismissBackgroundAlerts()
+    }
+
+    prevActiveStep.current = activeStep
+  }, [activeStep])
+
+  const handleMatchDisplayUpdate = useCallback((display: MatchDisplayState) => {
+    setMatchDisplay(display)
   }, [])
 
   const handleDemoChange = useCallback((demo: boolean) => {
@@ -45,11 +94,11 @@ export default function Home() {
     setDelaySeconds(service.delaySeconds)
     setHeadsUpSeconds(Math.min(service.delaySeconds, 30))
     await requestNotificationPermission()
-    setNotifPermission(getNotificationPermissionState())
     setActiveStep(3)
   }
 
   function handleChangeStep1() {
+    clearWatchSession()
     setSelectedFixture(null)
     setSelectedService(null)
     setMatchDisplay(null)
@@ -63,6 +112,16 @@ export default function Home() {
 
   const step1Complete = selectedFixture !== null && activeStep > 1
   const step2Complete = selectedService !== null && activeStep > 2
+
+  if (!hydrated) {
+    return (
+      <main className="min-h-screen">
+        <div className="mx-auto flex max-w-lg items-center justify-center px-4 pt-32">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-zesty/80" />
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="min-h-screen">
@@ -78,16 +137,7 @@ export default function Home() {
           <Header minimal onHome={handleChangeStep1} />
         )}
 
-        {activeStep === 3 && notifPermission !== null && notifPermission !== 'granted' && notifPermission !== 'unsupported' && (
-          <div className="mb-4 glass glass-warning rounded-xl px-4 py-3 text-xs text-amber-200/90 leading-relaxed">
-            Allow notifications so we can alert you when you&apos;re in another tab.
-          </div>
-        )}
-        {activeStep === 3 && notifPermission === 'denied' && (
-          <div className="mb-4 glass glass-danger rounded-xl px-4 py-3 text-xs text-red-200/90 leading-relaxed">
-            Notifications are blocked. Enable them in your browser settings to get alerts in the background.
-          </div>
-        )}
+        {activeStep < 3 && <HowItWorks />}
 
         <div className="flex flex-col gap-3">
           <SetupStep
@@ -136,10 +186,11 @@ export default function Home() {
             <ServicePicker onSelect={handleSelectService} />
           </SetupStep>
 
+          {activeStep >= 3 && <BackgroundAlertsRestoreButton />}
+
           <SetupStep
             number={3}
             title="Watch for big moments"
-            subtitle="Sync your delay and get alerted before the action hits your screen"
             status={activeStep < 3 ? 'locked' : 'active'}
           >
             {selectedFixture && selectedService && (
@@ -147,6 +198,7 @@ export default function Home() {
                 fixture={selectedFixture}
                 delaySeconds={delaySeconds}
                 headsUpSeconds={headsUpSeconds}
+                isDemo={isDemo}
                 onDelayChange={setDelaySeconds}
                 onHeadsUpChange={setHeadsUpSeconds}
                 onDisplayUpdate={handleMatchDisplayUpdate}
@@ -154,12 +206,33 @@ export default function Home() {
             )}
           </SetupStep>
         </div>
+
+        <footer className="mx-auto mt-10 max-w-md text-center">
+          <p className="text-[11px] leading-relaxed text-white/35">
+            Built for people who take football extremely seriously and work… moderately
+            seriously. Switcheroo watches the boring bits so you can look busy until something
+            worth switching tabs for actually happens.
+          </p>
+          <p className="mt-2 text-[10px] leading-relaxed text-white/25">
+            Not affiliated with FIFA, the World Cup, or your manager&apos;s belief that you
+            are &ldquo;fully present&rdquo; in this meeting.
+          </p>
+          <p className="mt-4">
+            <AuthorCreditLink />
+          </p>
+        </footer>
       </div>
     </main>
   )
 }
 
-function Header({ minimal = false, onHome }: { minimal?: boolean; onHome?: () => void }) {
+function Header({
+  minimal = false,
+  onHome,
+}: {
+  minimal?: boolean
+  onHome?: () => void
+}) {
   const titleClass = minimal
     ? `${boldonse.className} text-2xl font-normal uppercase leading-none tracking-tight text-[#CCFF00]`
     : `${boldonse.className} text-[2.75rem] font-normal uppercase leading-[0.95] tracking-tight text-[#CCFF00] sm:text-5xl`
@@ -177,13 +250,13 @@ function Header({ minimal = false, onHome }: { minimal?: boolean; onHome?: () =>
 
   if (minimal) {
     return (
-      <header className="tm-header mb-6">
+      <header className="tm-header mb-6 text-center">
         <div className="tm-header-glow" aria-hidden />
         {onHome ? (
           <button
             type="button"
             onClick={onHome}
-            className="group text-left transition-opacity hover:opacity-95"
+            className="group mx-auto block transition-opacity hover:opacity-95"
           >
             {brand}
           </button>
@@ -280,15 +353,17 @@ function StepHeading({
 }) {
   return (
     <>
-      <div className="mb-1 flex items-center gap-2">
-        <span
-          className={`glass-badge grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] font-bold leading-none tabular-nums ${
-            muted ? 'text-white/35' : 'text-zesty'
-          }`}
-        >
-          {number}
-        </span>
-        <h2 className={`text-lg font-bold ${muted ? 'text-white/45' : 'text-white'}`}>{title}</h2>
+      <div className="mb-1 flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <span
+            className={`glass-badge grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] font-bold leading-none tabular-nums ${
+              muted ? 'text-white/35' : 'text-zesty'
+            }`}
+          >
+            {number}
+          </span>
+          <h2 className={`text-lg font-bold ${muted ? 'text-white/45' : 'text-white'}`}>{title}</h2>
+        </div>
       </div>
       {subtitle && <p className={`pl-7 text-sm ${muted ? 'text-white/30' : 'text-white/45'}`}>{subtitle}</p>}
     </>
@@ -303,13 +378,13 @@ function CollapsedStepSummary({
   onChange?: () => void
 }) {
   return (
-    <div className="glass flex items-center justify-between rounded-xl px-4 py-2.5 glass-temporal">
+    <div className="glass flex w-full items-center justify-between rounded-xl px-4 py-2.5 glass-temporal">
       <div className="min-w-0 text-sm font-medium text-white/85">{children}</div>
       {onChange && (
         <button
           type="button"
           onClick={onChange}
-          className="glass-chip ml-3 shrink-0 rounded-md px-2 py-0.5 text-xs text-white/45 hover:text-white"
+          className="glass-chip ml-auto shrink-0 rounded-md px-2 py-0.5 text-[10px] text-white/45 hover:text-white"
         >
           Change
         </button>

@@ -1,0 +1,17 @@
+{
+  "name": "Switcheroo",
+  "short_name": "Switcheroo",
+  "description": "Get alerted before the big World Cup moments hit your screen.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#021408",
+  "theme_color": "#021408",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
